@@ -69,7 +69,7 @@ async function gitRootFor(start: string) {
   let cached = gitRootCache.get(key)
 
   if (!cached) {
-    cached = desktopGitRoot(start)
+    cached = desktopGitRoot(clean(start))
     gitRootCache.set(key, cached)
   }
 
