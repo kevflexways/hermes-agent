@@ -287,6 +287,13 @@ ENV HERMES_WEB_DIST=/opt/hermes/hermes_cli/web_dist
 # 502 / "[session ended]". Pointing at the prebuilt bundle sidesteps the whole
 # check. (A separate launcher hardening is tracked independently.)
 ENV HERMES_TUI_DIR=/opt/hermes/ui-tui
+# xactions MCP (global) - X/Twitter automation used by the follow-x-tech-accounts cron.
+# Installs to /usr/local/lib/node_modules (outside /opt/hermes, unaffected by the
+# chmod -R a-w hardening). puppeteer ^24 launches the chrome-headless-shell already
+# installed by the Playwright step; PUPPETEER_SKIP_DOWNLOAD avoids a redundant Chrome.
+RUN PUPPETEER_SKIP_DOWNLOAD=1 npm install -g --no-audit xactions@3.0.44 && \
+    npm cache clean --force
+
 ENV HERMES_HOME=/opt/data
 ENV HERMES_WRITE_SAFE_ROOT=/opt/data
 ENV HERMES_DISABLE_LAZY_INSTALLS=1
@@ -316,7 +323,7 @@ ENV HERMES_DISABLE_LAZY_INSTALLS=1
 # every other consumer.
 ENV PATH="/opt/hermes/bin:/opt/hermes/.venv/bin:/opt/data/.local/bin:${PATH}"
 RUN mkdir -p /opt/data
-VOLUME [ "/opt/data" ]
+# VOLUME [ "/opt/data" ]  # disabled for Railway (uses Railway Volumes mounted at /opt/data)
 
 # s6-overlay's /init is PID 1. It sets up the supervision tree, runs
 # /etc/cont-init.d/* (our stage2 hook), starts s6-rc services
@@ -341,4 +348,4 @@ VOLUME [ "/opt/data" ]
 # exit code. Without the wrapper-as-ENTRYPOINT, leading-dash args
 # like `--version` would be intercepted by /init's POSIX shell.
 ENTRYPOINT [ "/init", "/opt/hermes/docker/main-wrapper.sh" ]
-CMD [ ]
+CMD [ "gateway", "run" ]
